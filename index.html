@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Voice Carnage</title>
+<style>
+:root{--bg:#1c1f23;--card:#25292e;--line:rgba(255,255,255,.08);--tx:#e6edf3;--mu:#8b949e;--cyan:#22d3ee;--vio:#a855f7;--mag:#ec4899;--ok:#3fb950;--grad:var(--cyan);color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 "Segoe UI",Inter,system-ui,sans-serif;min-height:100vh}
+.wrap{max-width:1180px;margin:0 auto;padding:20px}
+header{display:flex;align-items:center;gap:16px;padding:16px 22px;border-radius:22px;background:rgba(22,27,34,.75);backdrop-filter:blur(16px);border:1px solid var(--line);box-shadow:0 20px 50px rgba(0,0,0,.45)}
+.logo{width:52px;height:52px;border-radius:16px;background:var(--grad);display:grid;place-items:center;box-shadow:0 0 26px rgba(168,85,247,.5)}
+h1{margin:0;font-size:28px;line-height:1.1;color:var(--cyan)}
+.sub{margin:0;color:var(--mu);font-size:13px}
+.sp{flex:1}
+.pill{padding:8px 16px;border-radius:99px;font-weight:600;font-size:13px;background:rgba(248,81,73,.12);border:1px solid rgba(248,81,73,.4);color:#ff7b72;transition:.3s}
+.pill.on{background:rgba(63,185,80,.12);border-color:rgba(63,185,80,.5);color:var(--ok)}
+.gear{width:46px;height:46px;border-radius:14px;border:1px solid var(--line);background:#2f343a;cursor:pointer;font-size:22px;transition:.25s}
+.gear:hover{transform:rotate(60deg);border-color:var(--cyan);box-shadow:0 0 18px rgba(34,211,238,.35)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:14px 2px}
+.chips span{padding:4px 12px;border-radius:99px;font-size:12px;background:rgba(63,185,80,.1);border:1px solid rgba(63,185,80,.3)}
+.chips .none{background:none;border-color:var(--line);color:var(--mu)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:0 14px 40px rgba(0,0,0,.4);animation:in .6s both;animation-delay:calc(var(--i,0)*.12s)}
+@keyframes in{from{opacity:0;transform:translateY(14px)}}
+.main{display:grid;grid-template-columns:340px 1fr;gap:20px}
+@media(max-width:860px){.main{grid-template-columns:1fr}}
+h2{margin:0 0 14px;font-size:16px}
+/* Fader */
+.faders{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;height:380px}
+.fd{display:flex;flex-direction:column;align-items:center;gap:8px;min-height:0}
+.trk{flex:1;display:flex;gap:8px;min-height:0}
+.fd input{writing-mode:vertical-lr;direction:rtl;-webkit-appearance:none;appearance:none;width:26px;height:100%;border-radius:99px;outline:0;cursor:pointer;background:linear-gradient(to top,var(--cyan) var(--v,50%),#3a4047 var(--v,50%))}
+.fd input::-webkit-slider-thumb{-webkit-appearance:none;width:38px;height:20px;border-radius:8px;background:#e6edf3;box-shadow:0 0 0 3px rgba(168,85,247,.5),0 0 16px var(--vio)}
+.vm{width:9px;border-radius:6px;background:#15171a;position:relative;overflow:hidden}
+.vm i{position:absolute;left:0;right:0;bottom:0;height:0;background:var(--cyan)}
+.fd b{font-size:13px;color:var(--cyan)}.fd span{font-size:12px;color:var(--mu)}
+/* Pads */
+.pads{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:620px;margin:0 auto}
+.pad{aspect-ratio:1;border-radius:22px;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:10px;cursor:pointer;color:#fff;user-select:none;transition:transform .15s,box-shadow .2s;overflow:hidden}
+.pad.full{background:var(--c1);box-shadow:0 10px 26px rgba(0,0,0,.45)}
+.pad.full:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.5),0 0 30px var(--c1)}
+.pad.full:active,.pad.on{transform:scale(.96);box-shadow:0 0 0 2px #fff,0 0 36px var(--c1)}
+.pad.empty{background:rgba(90,96,105,.22);border:1px solid rgba(255,255,255,.05);backdrop-filter:blur(6px);color:rgba(255,255,255,.28);font-size:30px}
+.pad.empty:hover{background:rgba(90,96,105,.32)}
+.pad img{width:46%;height:46%;object-fit:contain;border-radius:10px}
+.pad .ic{font-size:34px}
+.pad .nm{font-weight:700;font-size:14px;text-align:center;max-width:92%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pad .ed{position:absolute;top:8px;right:8px;width:28px;height:28px;border:0;border-radius:9px;background:rgba(0,0,0,.35);color:#fff;cursor:pointer;opacity:0;transition:.2s}
+.pad:hover .ed{opacity:1}
+.pad.drag{opacity:.35}
+.vc{display:grid;grid-template-columns:minmax(260px,1fr) 2fr;gap:28px;align-items:start}@media(max-width:860px){.vc{grid-template-columns:1fr}}.fxg{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0 10px}.scale{display:flex;justify-content:space-between;color:var(--mu);font-size:12px;margin-top:6px}.wave{height:90px;width:100%;display:block;border-radius:14px;background:#15171a;border:1px solid var(--line)}
+.wl{display:flex;justify-content:space-between;color:var(--mu);font-size:12px;margin:12px 4px 6px}
+/* Drawer / Dialog */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);display:none;z-index:20}
+.ov.show{display:block}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(440px,100%);background:#202327;border-left:1px solid var(--line);padding:calc(20px + env(safe-area-inset-top,0px)) 20px 20px;overflow:auto;transform:translateX(100%);transition:transform .35s;z-index:21;box-shadow:-20px 0 60px rgba(0,0,0,.5)}
+.drawer.show{transform:none}
+.dlg{position:fixed;left:50%;top:50%;width:min(460px,94%);max-height:92vh;overflow:auto;transform:translate(-50%,-50%);background:#202327;border:1px solid var(--line);border-radius:22px;padding:22px;z-index:31;display:none;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.dlg.show{display:block}.ov2{z-index:30}
+.drawer h3{margin:22px 0 10px;color:var(--cyan);font-size:14px}
+label.f{display:block;font-size:12px;color:var(--mu);margin:10px 0 4px}
+select,input[type=text],input[type=password],input[type=number]{width:100%;padding:10px 12px;border-radius:12px;background:#15171a;border:1px solid var(--line);color:var(--tx);font:inherit}
+.btn{padding:10px 16px;border-radius:12px;border:1px solid var(--line);background:#2f343a;color:var(--tx);font:inherit;font-weight:600;cursor:pointer;transition:.2s}
+.btn:hover{border-color:var(--cyan);box-shadow:0 0 16px rgba(34,211,238,.3)}
+.btn.pri{background:var(--grad);border:0}.btn.red{background:#3b1d22;border-color:#f8514955}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.sw{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid var(--line);margin-bottom:6px;cursor:pointer}
+.sw input{display:none}
+.sw .t{width:40px;height:22px;border-radius:99px;background:#30363d;position:relative;transition:.3s;flex:none}
+.sw .t:after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.3s}
+.sw input:checked+.t{background:var(--grad)}.sw input:checked+.t:after{left:21px}
+.sw small{margin-left:6px;color:var(--mu)}
+input[type=range].h{width:100%;-webkit-appearance:none;appearance:none;height:8px;border-radius:99px;background:#3a4047;outline:0}
+input[type=range].h::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 0 0 4px rgba(168,85,247,.5)}
+.badge{display:inline-block;padding:5px 12px;border-radius:99px;background:rgba(255,255,255,.06);font-weight:700;font-size:13px}
+.notice{padding:12px 14px;border-radius:14px;background:rgba(236,72,153,.1);border:1px solid rgba(236,72,153,.45);color:#ffb3d9;font-weight:600;font-size:13px}
+.guide{color:var(--mu);font-size:13px}.guide b{color:var(--tx)}
+.sws{display:flex;gap:8px;margin-top:6px}.sws button{width:34px;height:34px;border-radius:10px;border:2px solid transparent;cursor:pointer}.sws button.sel{border-color:#fff}
+.hide{display:none}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#2f343a;border:1px solid var(--line);padding:10px 18px;border-radius:14px;opacity:0;pointer-events:none;transition:.3s;z-index:40}
+#toast.show{opacity:1}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01s!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="logo"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M3 12v0M7 8v8M11 4v16M15 8v8M19 10v4M22 12v0"/></svg></div>
+  <div><h1>Voice Carnage</h1><p class="sub">Realtime Voice Changer &amp; Soundboard</p></div>
+  <div class="sp"></div>
+  <div class="pill" id="status">● Mikrofon getrennt</div>
+  <button class="btn pri" id="instBtn">⬇ Installieren</button>
+  <button class="gear" id="gear" title="Einstellungen" aria-label="Einstellungen">⚙</button>
+</header>
+<div class="chips" id="chips"></div>
+
+<div class="main">
+  <section class="card" style="--i:1">
+    <h2>Mixer</h2>
+    <div class="faders" id="faders"></div>
+  </section>
+  <section class="card" style="--i:2">
+    <h2>Deck</h2>
+    <div class="pads" id="pads"></div>
+  </section>
+</div>
+
+<section class="card" style="--i:3;margin-top:20px">
+  <h2>Stimmenverzerrer</h2>
+  <div class="vc">
+    <div>
+      <div class="row" style="justify-content:space-between;margin:0 0 10px"><span class="badge" id="pBadge">● Normal</span><b id="pVal">0 Halbtöne</b></div>
+      <input class="h" type="range" id="pitch" min="-12" max="12" step="0.5" value="0" aria-label="Pitch">
+      <div class="scale"><span>Tiefer</span><span>Normal</span><span>Höher</span></div>
+    </div>
+    <div class="fxg" id="fxList"></div>
+  </div>
+</section>
+
+<section class="card" style="--i:4;margin-top:20px">
+  <div class="wl"><span>Eingang (Mikrofon)</span></div><canvas class="wave" id="wIn"></canvas>
+  <div class="wl"><span>Ausgang (Mix an virtuelles Kabel)</span></div><canvas class="wave" id="wOut"></canvas>
+</section>
+</div>
+
+<!-- Einstellungen -->
+<div class="ov" id="ov"></div>
+<aside class="drawer" id="drawer" aria-label="Einstellungen">
+  <div class="row" style="margin:0;justify-content:space-between;align-items:center"><h2 style="margin:0">Einstellungen</h2><button class="btn" id="closeSet">Schließen</button></div>
+  <h3>Audio</h3>
+  <button class="btn pri" id="micBtn" style="width:100%">Mikrofon aktivieren</button>
+  <label class="f">Mikrofon</label><select id="devSel"><option value="">Standard-Mikrofon</option></select>
+  <label class="f">Ausgabe (virtuelles Kabel, z. B. CABLE Input)</label><select id="outSel"><option value="">Keine Ausgabe</option></select>
+  <label class="f">Abhören über</label><select id="monSel"><option value="">Standardgerät</option></select>
+  <label class="sw" style="margin-top:8px"><span>Abhören <small>Kopfhörer nutzen</small></span><input type="checkbox" id="monitor" checked><span class="t"></span></label>
+  <h3>Audio CleanUp</h3><div id="cleanList"></div>
+  <h3>OBS-Steuerung</h3>
+  <div class="guide">In OBS: Werkzeuge → WebSocket-Servereinstellungen → Server aktivieren.</div>
+  <label class="f">Adresse</label><input type="text" id="obsHost" value="localhost">
+  <label class="f">Port</label><input type="number" id="obsPort" value="4455">
+  <label class="f">Passwort</label><input type="password" id="obsPw">
+  <div class="row"><button class="btn pri" id="obsBtn">Mit OBS verbinden</button><span class="badge" id="obsSt">Getrennt</span></div>
+  <h3>Einrichtung</h3>
+  <div class="notice">Für OBS, Discord, Teams, Skype oder WhatsApp wird ein virtuelles Audiokabel wie VB-Cable oder Virtual Audio Cable benötigt. Voice Carnage sendet an „CABLE Input“, die anderen Programme wählen „CABLE Output“ als Mikrofon.</div>
+  <div class="guide" style="margin-top:12px">
+    <p><b>OBS Studio:</b> Audio-Eingabe-Aufnahme hinzufügen → Gerät „CABLE Output“ → Testen.</p>
+    <p><b>Discord:</b> Einstellungen → Sprache &amp; Video → Eingabegerät „CABLE Output“.</p>
+    <p><b>Microsoft Teams:</b> Einstellungen → Geräte → Mikrofon „CABLE Output“.</p>
+    <p><b>Skype:</b> Einstellungen → Audio &amp; Video → Mikrofon „CABLE Output“.</p>
+    <p><b>WhatsApp Desktop:</b> Einstellungen → Audio → Mikrofon „CABLE Output“.</p>
+  </div>
+</aside>
+
+<!-- Pad-Editor -->
+<div class="ov ov2" id="ov2"></div>
+<div class="dlg" id="dlg">
+  <h2>Taste belegen</h2>
+  <label class="f">Name</label><input type="text" id="eName" maxlength="24">
+  <label class="f">Aktion</label>
+  <select id="eType">
+    <option value="sound">Sound abspielen</option><option value="fx">Stimmeffekt umschalten</option>
+    <option value="scene">OBS: Szene wechseln</option><option value="cam">OBS: Kamera / Quelle bewegen</option>
+    <option value="mute">OBS: Audioquelle stumm schalten</option><option value="stream">OBS: Stream starten / stoppen</option><option value="record">OBS: Aufnahme starten / stoppen</option>
+  </select>
+  <div data-for="sound"><label class="f">Audiodatei (MP3, WAV, OGG)</label><input type="file" id="eFile" accept=".mp3,.wav,.ogg,audio/*"><div class="guide" id="eFileNm"></div></div>
+  <div data-for="fx" class="hide"><label class="f">Effekt</label><select id="eFx"></select></div>
+  <div data-for="scene" class="hide"><label class="f">Szenenname</label><input type="text" id="eScene"></div>
+  <div data-for="cam" class="hide"><label class="f">Quellenname (z. B. Kamera)</label><input type="text" id="eSrc">
+    <label class="f">Richtung</label><select id="eDir"><option value="up">Hoch</option><option value="down">Runter</option><option value="left">Links</option><option value="right">Rechts</option></select>
+    <label class="f">Schrittweite (Pixel)</label><input type="number" id="eStep" value="50"></div>
+  <div data-for="mute" class="hide"><label class="f">Name der Audioquelle</label><input type="text" id="eInput"></div>
+  <label class="f">Farbe</label><div class="sws" id="eCol"></div>
+  <label class="f">Eigenes Logo (optional)</label><input type="file" id="eIcon" accept="image/*">
+  <div class="row"><button class="btn pri" id="eSave">Speichern</button><button class="btn" id="eCancel">Abbrechen</button><button class="btn red" id="eClear">Leeren</button></div>
+</div>
+<div class="dlg" id="instDlg">
+  <h2>Voice Carnage installieren</h2>
+  <div class="guide"><p><b>1. Virtuelles Kabel:</b> Damit OBS, Discord &amp; Co. dich hören, installiere VB-Cable und starte den PC neu.</p>
+  <a class="btn" href="https://vb-audio.com/Cable/" target="_blank" rel="noopener" style="display:inline-block;text-decoration:none">VB-Cable herunterladen</a>
+  <p><b>2. Windows-Programm:</b> ZIP entpacken, im Ordner <code>npm install</code> und dann <code>npm run dist</code> ausführen. Danach liegt die Datei „Voice Carnage.exe“ im Ordner „dist“.</p>
+  <p><b>3. Alternative:</b> Läuft die Seite über https, kannst du sie in Chrome oder Edge über das Installieren-Symbol in der Adressleiste als App installieren.</p></div>
+  <div class="row"><button class="btn" id="instClose">Schließen</button></div>
+</div>
+<div id="toast"></div>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s), clamp=(v,a,b)=>Math.min(b,Math.max(a,v)), safe=(f,d)=>{try{return f()}catch(e){return d}};
+const toast=m=>{const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("show"),3500)};
+/* ===== Zustand ===== */
+const S={mic:false,pitch:0,fx:{},clean:{},pads:Array(9).fill(null),playing:{}};
+const FX={monster:{n:"Monster Stimme",s:-6,dist:.3},robot:{n:"Roboter Stimme",ring:60,depth:1},alien:{n:"Alien Stimme",s:5,ring:300,depth:.6},demon:{n:"Dämon Stimme",s:-10,dist:.8},cartoon:{n:"Cartoon Stimme",s:7},chipmunk:{n:"Chipmunk Stimme",s:10},radio:{n:"Radio Effekt",band:1,dist:.2}};
+const CLEAN={gate:"Hintergrundgeräusche entfernen",noise:"Rauschunterdrückung",boost:"Sprachverstärkung",echo:"Echo-Unterdrückung",agc:"Automatische Lautstärkeanpassung"};
+const COLORS=[["#06b6d4","#3b82f6"],["#a855f7","#6366f1"],["#ec4899","#a855f7"],["#f43f5e","#f97316"],["#10b981","#06b6d4"],["#eab308","#f97316"]];
+const ICONS={sound:"🔊",fx:"🎭",scene:"🎬",cam:"🎥",mute:"🔇",stream:"📡",record:"⏺"};
+/* ===== Audio-Graph ===== */
+let ctx,N={},stream,srcNode,sh={semi:0,gate:false},buffers={};
+const an=(fft=1024)=>{const a=ctx.createAnalyser();a.fftSize=fft;return a};
+function ensureCtx(){
+  if(ctx){if(ctx.state==="suspended")ctx.resume();return ctx}
+  ctx=new(window.AudioContext||window.webkitAudioContext)();
+  const bq=(t,f)=>{const b=ctx.createBiquadFilter();b.type=t;b.frequency.value=f;return b};
+  N.hp=bq("highpass",20);N.boost=bq("peaking",3000);N.comp=ctx.createDynamicsCompressor();N.sp=ctx.createScriptProcessor(2048,1,1);
+  N.ring=ctx.createGain();N.depth=ctx.createGain();N.osc=ctx.createOscillator();N.osc.connect(N.depth);N.depth.connect(N.ring.gain);N.depth.gain.value=0;N.osc.start();
+  N.shaper=ctx.createWaveShaper();N.fhp=bq("highpass",20);N.flp=bq("lowpass",20000);
+  N.micG=ctx.createGain();N.sbG=ctx.createGain();N.master=ctx.createGain();N.monG=ctx.createGain();
+  N.aIn=an(2048);N.aMic=an();N.aSb=an();N.aMst=an(2048);
+  N.dest=ctx.createMediaStreamDestination();N.mdest=ctx.createMediaStreamDestination();
+  [N.hp,N.boost,N.comp,N.sp,N.ring,N.shaper,N.fhp,N.flp,N.micG,N.master].reduce((a,b)=>(a.connect(b),b));
+  N.micG.connect(N.aMic);N.sbG.connect(N.master);N.sbG.connect(N.aSb);N.master.connect(N.aMst);N.master.connect(N.dest);N.master.connect(N.monG);N.monG.connect(N.mdest);
+  N.out=new Audio();N.out.srcObject=N.dest.stream;N.out.muted=true;N.out.play().catch(()=>{});
+  N.mon=new Audio();N.mon.srcObject=N.mdest.stream;N.mon.play().catch(()=>{});
+  /* Pitch-Shifter (zwei überblendete Delay-Leser) + Noise-Gate */
+  const L=16384,M=L-1,W=3600,buf=new Float32Array(L);let w=0,ph=0,gv=1;
+  N.sp.onaudioprocess=e=>{const i=e.inputBuffer.getChannelData(0),o=e.outputBuffer.getChannelData(0),r=Math.pow(2,sh.semi/12),inc=(1-r)/W,byp=Math.abs(sh.semi)<.01;
+    let s=0;for(let k=0;k<i.length;k++)s+=i[k]*i[k];const tg=(!sh.gate||Math.sqrt(s/i.length)>.012)?1:0;
+    for(let k=0;k<i.length;k++){buf[w]=i[k];let out=0;
+      if(byp)out=i[k];else{for(let h=0;h<2;h++){const p=(ph+h*.5)%1,rp=w-(p*W+2),a=Math.floor(rp),f=rp-a;out+=(buf[a&M]*(1-f)+buf[(a+1)&M]*f)*(.5-.5*Math.cos(2*Math.PI*p))}ph+=inc;ph-=Math.floor(ph)}
+      gv+=(tg-gv)*.002;o[k]=out*gv;w=(w+1)&M}};
+  applyAll();return ctx;
+}
+function applyAll(){
+  if(!ctx)return;let semi=S.pitch,dist=0,ring=0,depth=0,band=0;
+  for(const k in FX)if(S.fx[k]){const f=FX[k];semi+=f.s||0;dist=Math.max(dist,f.dist||0);if(f.ring){ring=f.ring;depth=f.depth}if(f.band)band=1}
+  sh.semi=clamp(semi,-24,24);sh.gate=!!S.clean.gate;N.osc.frequency.value=ring||60;N.depth.gain.value=depth;N.ring.gain.value=1-depth;
+  if(dist>0){const c=new Float32Array(1024),k=dist*80;for(let i=0;i<1024;i++){const x=i/512-1;c[i]=(1+k)*x/(1+k*Math.abs(x))}N.shaper.curve=c}else N.shaper.curve=null;
+  N.fhp.frequency.value=band?500:20;N.flp.frequency.value=band?3200:20000;N.boost.gain.value=S.clean.boost?6:0;N.hp.frequency.value=S.clean.noise?90:20;
+  N.comp.threshold.value=S.clean.agc?-40:0;N.comp.ratio.value=S.clean.agc?8:1;
+  N.micG.gain.value=$("#f-mic").value/100;N.sbG.gain.value=$("#f-sb").value/100;N.master.gain.value=$("#f-master").value/100;N.monG.gain.value=$("#monitor").checked?1:0;
+  N.out.muted=!$("#outSel").value;
+}
+/* ===== Mikrofon & Geräte ===== */
+async function sink(a,id){if(a&&a.setSinkId)await a.setSinkId(id||"")}
+async function listDevices(){
+  try{const d=await navigator.mediaDevices.enumerateDevices();
+    const fill=(sel,kind,def,key)=>{const cur=sel.value||localStorage.getItem(key)||"";sel.innerHTML=`<option value="">${def}</option>`;
+      d.filter(x=>x.kind===kind).forEach((x,i)=>{const o=document.createElement("option");o.value=x.deviceId;o.textContent=x.label||`Gerät ${i+1}`;sel.appendChild(o)});sel.value=cur;if(sel.value!==cur)sel.value=""};
+    fill($("#devSel"),"audioinput","Standard-Mikrofon","vc_in");fill($("#outSel"),"audiooutput","Keine Ausgabe","vc_out");fill($("#monSel"),"audiooutput","Standardgerät","vc_mon");
+    if(!$("#outSel").value&&!localStorage.getItem("vc_out")){const c=[...$("#outSel").options].find(o=>/cable input|vb-audio|virtual/i.test(o.textContent));if(c){$("#outSel").value=c.value;localStorage.setItem("vc_out",c.value)}}
+    if(ctx){await safe(()=>sink(N.out,$("#outSel").value));await safe(()=>sink(N.mon,$("#monSel").value));applyAll()}
+  }catch(e){}
+}
+async function startMic(){
+  try{if(!navigator.mediaDevices?.getUserMedia)throw new Error("Kein Mikrofonzugriff möglich");
+    ensureCtx();stopStream();const id=$("#devSel").value;
+    stream=await navigator.mediaDevices.getUserMedia({audio:{deviceId:id?{exact:id}:undefined,noiseSuppression:!!S.clean.noise,echoCancellation:!!S.clean.echo,autoGainControl:!!S.clean.agc}});
+    srcNode=ctx.createMediaStreamSource(stream);srcNode.connect(N.hp);srcNode.connect(N.aIn);S.mic=true;await listDevices();
+  }catch(e){S.mic=false;toast(e.name==="NotAllowedError"?"Mikrofon-Zugriff verweigert.":e.name==="NotFoundError"?"Kein Mikrofon gefunden.":"Mikrofon-Fehler: "+e.message)}
+  refresh();
+}
+function stopStream(){if(srcNode)srcNode.disconnect();if(stream)stream.getTracks().forEach(t=>t.stop());srcNode=stream=null}
+$("#micBtn").onclick=()=>{if(S.mic){stopStream();S.mic=false;refresh()}else startMic()};
+$("#devSel").onchange=e=>{localStorage.setItem("vc_in",e.target.value);if(S.mic)startMic()};
+$("#outSel").onchange=async e=>{localStorage.setItem("vc_out",e.target.value);ensureCtx();try{await sink(N.out,e.target.value)}catch(x){toast("Ausgabegerät nicht wechselbar (Chrome/Edge/App nutzen)")}applyAll()};
+$("#monSel").onchange=async e=>{localStorage.setItem("vc_mon",e.target.value);ensureCtx();await safe(()=>sink(N.mon,e.target.value))};
+$("#monitor").onchange=applyAll;
+/* ===== Mixer ===== */
+const CH=[["mic","Mikrofon",100,150,"aMic"],["sb","Sound",80,150,"aSb"],["master","Gesamt",100,100,"aMst"]];
+$("#faders").innerHTML=CH.map(c=>`<div class="fd"><b id="v-${c[0]}">${c[2]}%</b><div class="trk"><input type="range" id="f-${c[0]}" min="0" max="${c[3]}" value="${c[2]}" aria-label="${c[1]}"><div class="vm"><i id="m-${c[0]}"></i></div></div><span>${c[1]}</span></div>`).join("");
+CH.forEach(c=>{const el=$("#f-"+c[0]);const u=()=>{el.style.setProperty("--v",el.value/el.max*100+"%");$("#v-"+c[0]).textContent=el.value+"%";applyAll()};el.oninput=u;u()});
+/* ===== Stimme & CleanUp (Einstellungen) ===== */
+const sw=(id,l,x)=>`<label class="sw"><span>${l}${x||""}</span><input type="checkbox" data-id="${id}"><span class="t"></span></label>`;
+$("#fxList").innerHTML=Object.keys(FX).map(k=>sw("fx_"+k,FX[k].n)).join("");
+$("#cleanList").innerHTML=Object.keys(CLEAN).map(k=>sw("cl_"+k,CLEAN[k])).join("");
+document.querySelectorAll("input[data-id]").forEach(i=>i.onchange=()=>{const [t,k]=i.dataset.id.split("_");(t==="fx"?S.fx:S.clean)[k]=i.checked;applyAll();refresh();if(t==="cl"&&S.mic&&["noise","echo","agc"].includes(k))startMic()});
+$("#pitch").oninput=e=>{S.pitch=+e.target.value;applyAll();refresh()};
+/* ===== Statusanzeigen ===== */
+function refresh(){
+  const p=S.pitch;$("#pBadge").textContent=p<0?"⬇ Tiefe Stimme":p>0?"⬆ Hohe Stimme":"● Normal";$("#pVal").textContent=(p>0?"+":"")+p+" Halbtöne";
+  $("#status").className="pill"+(S.mic?" on":"");$("#status").textContent=S.mic?"● Mikrofon verbunden":"● Mikrofon getrennt";
+  $("#micBtn").textContent=S.mic?"Mikrofon deaktivieren":"Mikrofon aktivieren";
+  document.querySelectorAll("input[data-id]").forEach(i=>{const [t,k]=i.dataset.id.split("_");i.checked=!!(t==="fx"?S.fx:S.clean)[k]});
+  const a=[];if(S.mic)a.push("Mikrofon aktiv");if(p<0)a.push("Tiefe Stimme");if(p>0)a.push("Hohe Stimme");
+  for(const k in FX)if(S.fx[k])a.push(FX[k].n);if(S.clean.gate||S.clean.noise)a.push("Hintergrundfilter aktiv");if(S.clean.boost)a.push("Sprachverstärkung");if(S.clean.echo)a.push("Echo-Unterdrückung");if(S.clean.agc)a.push("Auto-Lautstärke");
+  if(S.pads.some(x=>x))a.push("Soundboard aktiv");if(OBS.ok)a.push("OBS verbunden");
+  $("#chips").innerHTML=a.length?a.map(x=>`<span>✅ ${x}</span>`).join(""):`<span class="none">Keine Module aktiv</span>`;
+}
+/* ===== Pegel & Wellenformen ===== */
+const buf1=new Float32Array(1024),buf2=new Float32Array(2048),cvIn=$("#wIn"),cvOut=$("#wOut");
+function size(){[cvIn,cvOut].forEach(c=>{c.width=c.clientWidth*devicePixelRatio;c.height=c.clientHeight*devicePixelRatio})}addEventListener("resize",size);size();
+function wave(cv,a,col){const g=cv.getContext("2d"),w=cv.width,h=cv.height;g.clearRect(0,0,w,h);g.lineWidth=2*devicePixelRatio;g.strokeStyle=col;g.shadowColor=col;g.shadowBlur=10;g.beginPath();
+  if(!a){g.moveTo(0,h/2);g.lineTo(w,h/2)}else{a.getFloatTimeDomainData(buf2);for(let x=0;x<w;x++){const v=buf2[Math.floor(x/w*buf2.length)];x?g.lineTo(x,h/2+v*h*.9):g.moveTo(x,h/2)}}g.stroke()}
+(function loop(){
+  CH.forEach(c=>{let l=0;if(ctx){const a=N[c[4]];a.getFloatTimeDomainData(buf1);let s=0;for(const v of buf1)s+=v*v;l=clamp((20*Math.log10(Math.sqrt(s/buf1.length)||1e-5)+60)/60,0,1)}$("#m-"+c[0]).style.height=l*100+"%"});
+  wave(cvIn,ctx&&S.mic?N.aIn:null,"#22d3ee");wave(cvOut,ctx?N.aMst:null,"#ec4899");requestAnimationFrame(loop)})();
+/* ===== OBS WebSocket v5 ===== */
+const OBS={ws:null,ok:false,n:0,p:{}};
+const b64=b=>btoa(String.fromCharCode(...new Uint8Array(b))),sha=async s=>b64(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s)));
+OBS.connect=()=>{
+  if(OBS.ws)OBS.ws.close();const ws=OBS.ws=new WebSocket(`ws://${$("#obsHost").value}:${$("#obsPort").value}`);
+  $("#obsSt").textContent="Verbinde …";
+  ws.onmessage=async e=>{const m=JSON.parse(e.data),d=m.d;
+    if(m.op===0){const r={rpcVersion:1,eventSubscriptions:0};if(d.authentication){const sec=await sha($("#obsPw").value+d.authentication.salt);r.authentication=await sha(sec+d.authentication.challenge)}ws.send(JSON.stringify({op:1,d:r}))}
+    if(m.op===2){OBS.ok=true;$("#obsSt").textContent="Verbunden";toast("OBS verbunden");refresh()}
+    if(m.op===7&&OBS.p[d.requestId]){const p=OBS.p[d.requestId];delete OBS.p[d.requestId];d.requestStatus.result?p.res(d.responseData||{}):p.rej(new Error(d.requestStatus.comment||"OBS-Fehler"))}};
+  ws.onclose=()=>{OBS.ok=false;$("#obsSt").textContent="Getrennt";refresh()};ws.onerror=()=>toast("OBS nicht erreichbar. Läuft der WebSocket-Server?");
+};
+OBS.req=(type,data)=>new Promise((res,rej)=>{if(!OBS.ok)return rej(new Error("OBS nicht verbunden (Einstellungen ⚙)"));const id=String(++OBS.n);OBS.p[id]={res,rej};OBS.ws.send(JSON.stringify({op:6,d:{requestType:type,requestId:id,requestData:data}}));setTimeout(()=>{if(OBS.p[id]){delete OBS.p[id];rej(new Error("OBS antwortet nicht"))}},5000)});
+$("#obsBtn").onclick=OBS.connect;
+async function moveCam(c){
+  const sc=(await OBS.req("GetCurrentProgramScene")).currentProgramSceneName,sceneName=sc;
+  const id=(await OBS.req("GetSceneItemId",{sceneName,sourceName:c.src})).sceneItemId;
+  const t=(await OBS.req("GetSceneItemTransform",{sceneName,sceneItemId:id})).sceneItemTransform,st=+c.step||50;
+  const dx={left:-st,right:st}[c.dir]||0,dy={up:-st,down:st}[c.dir]||0;
+  await OBS.req("SetSceneItemTransform",{sceneName,sceneItemId:id,sceneItemTransform:{positionX:t.positionX+dx,positionY:t.positionY+dy}});
+}
+/* ===== Speicherung ===== */
+const dbp=new Promise((res,rej)=>{const r=indexedDB.open("voicecarnage",1);r.onupgradeneeded=()=>r.result.createObjectStore("s");r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+const idb=(m,f)=>dbp.then(d=>new Promise((res,rej)=>{const t=d.transaction("s",m),q=f(t.objectStore("s"));t.oncomplete=()=>res(q.result);t.onerror=()=>rej(t.error)}));
+const save=()=>safe(()=>localStorage.setItem("vc_pads2",JSON.stringify(S.pads)));
+/* ===== Tasten ausführen ===== */
+async function playSound(id){
+  if(S.playing[id]){stopSound(id);return}
+  ensureCtx();if(!buffers[id]){const b=await idb("readonly",s=>s.get(id));if(!b)throw new Error("Sound-Datei fehlt");buffers[id]=await ctx.decodeAudioData(await b.arrayBuffer())}
+  const src=ctx.createBufferSource();src.buffer=buffers[id];src.connect(N.sbG);src.onended=()=>{delete S.playing[id];renderPads()};src.start();S.playing[id]=src;renderPads();
+}
+function stopSound(id){const s=S.playing[id];delete S.playing[id];if(s)safe(()=>s.stop());renderPads()}
+async function run(p){
+  const c=p.cfg||{};
+  try{switch(p.type){
+    case"sound":await playSound(p.id);break;
+    case"fx":S.fx[c.fx]=!S.fx[c.fx];applyAll();refresh();toast(FX[c.fx].n+(S.fx[c.fx]?" an":" aus"));break;
+    case"scene":await OBS.req("SetCurrentProgramScene",{sceneName:c.scene});break;
+    case"cam":await moveCam(c);break;
+    case"mute":await OBS.req("ToggleInputMute",{inputName:c.input});break;
+    case"stream":await OBS.req("ToggleStream");break;
+    case"record":await OBS.req("ToggleRecord");break}
+  }catch(e){toast(e.message)}
+}
+/* ===== Deck ===== */
+let drag=-1,edIdx=-1,edIcon=null,edCol=0,edFile=null;
+function renderPads(){
+  const box=$("#pads");box.innerHTML="";
+  S.pads.forEach((p,i)=>{const el=document.createElement("div");
+    if(!p){el.className="pad empty";el.textContent="+";el.title="Taste belegen";el.onclick=()=>openEd(i)}
+    else{const c=COLORS[p.color%COLORS.length];el.className="pad full"+(S.playing[p.id]?" on":"");el.style.setProperty("--c1",c[0]);el.style.setProperty("--c2",c[1]);
+      el.innerHTML=(p.icon?`<img alt="">`:`<div class="ic">${ICONS[p.type]}</div>`)+`<div class="nm"></div><button class="ed" title="Bearbeiten">✎</button>`;
+      if(p.icon)el.querySelector("img").src=p.icon;el.querySelector(".nm").textContent=p.name;
+      el.onclick=e=>{if(e.target.closest(".ed"))openEd(i);else run(p)}}
+    el.draggable=true;el.ondragstart=()=>{drag=i;el.classList.add("drag")};el.ondragend=()=>el.classList.remove("drag");el.ondragover=e=>e.preventDefault();
+    el.ondrop=e=>{e.preventDefault();if(drag<0||drag===i)return;[S.pads[drag],S.pads[i]]=[S.pads[i],S.pads[drag]];drag=-1;save();renderPads()};
+    box.appendChild(el)});
+}
+/* ===== Editor ===== */
+$("#eFx").innerHTML=Object.keys(FX).map(k=>`<option value="${k}">${FX[k].n}</option>`).join("");
+$("#eCol").innerHTML=COLORS.map((c,i)=>`<button data-i="${i}" style="background:${c[0]}" aria-label="Farbe ${i+1}"></button>`).join("");
+const pickCol=i=>{edCol=i;document.querySelectorAll("#eCol button").forEach(b=>b.classList.toggle("sel",+b.dataset.i===i))};
+document.querySelectorAll("#eCol button").forEach(b=>b.onclick=()=>pickCol(+b.dataset.i));
+const showFor=()=>document.querySelectorAll("[data-for]").forEach(d=>d.classList.toggle("hide",d.dataset.for!==$("#eType").value));
+$("#eType").onchange=showFor;
+function openEd(i){
+  edIdx=i;const p=S.pads[i],c=p?.cfg||{};edIcon=p?.icon||null;edFile=null;
+  $("#eName").value=p?.name||"";$("#eType").value=p?.type||"sound";$("#eFx").value=c.fx||"monster";$("#eScene").value=c.scene||"";$("#eSrc").value=c.src||"";$("#eDir").value=c.dir||"up";$("#eStep").value=c.step||50;$("#eInput").value=c.input||"";
+  $("#eFileNm").textContent=p?.type==="sound"?"Aktuell gespeichert. Neue Datei wählen zum Ersetzen.":"";$("#eFile").value="";$("#eIcon").value="";pickCol(p?.color??i%COLORS.length);showFor();
+  $("#dlg").classList.add("show");$("#ov2").classList.add("show");
+}
+const closeEd=()=>{$("#dlg").classList.remove("show");$("#ov2").classList.remove("show");closeInst()};
+$("#eCancel").onclick=closeEd;$("#ov2").onclick=closeEd;
+$("#eFile").onchange=e=>{edFile=e.target.files[0]||null;$("#eFileNm").textContent=edFile?edFile.name:""};
+$("#eIcon").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const b=await createImageBitmap(f),c=document.createElement("canvas");c.width=c.height=128;const g=c.getContext("2d"),s=Math.min(128/b.width,128/b.height);g.drawImage(b,(128-b.width*s)/2,(128-b.height*s)/2,b.width*s,b.height*s);edIcon=c.toDataURL("image/png")}catch(x){toast("Bild konnte nicht gelesen werden")}};
+$("#eClear").onclick=async()=>{const p=S.pads[edIdx];if(p){stopSound(p.id);safe(()=>idb("readwrite",s=>s.delete(p.id)))}S.pads[edIdx]=null;save();renderPads();refresh();closeEd()};
+$("#eSave").onclick=async()=>{
+  const type=$("#eType").value,old=S.pads[edIdx],id=old?.id||Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+  if(type==="sound"){if(edFile){try{await idb("readwrite",s=>s.put(edFile,id));delete buffers[id]}catch(e){return toast("Speichern nicht möglich")}}else if(!old||old.type!=="sound")return toast("Bitte eine Audiodatei wählen")}
+  const cfg={fx:$("#eFx").value,scene:$("#eScene").value.trim(),src:$("#eSrc").value.trim(),dir:$("#eDir").value,step:+$("#eStep").value,input:$("#eInput").value.trim()};
+  S.pads[edIdx]={id,type,name:$("#eName").value.trim()||"Taste "+(edIdx+1),color:edCol,icon:edIcon,cfg};save();renderPads();refresh();closeEd();
+};
+/* ===== Einstellungen öffnen/schließen ===== */
+const openSet=v=>{$("#drawer").classList.toggle("show",v);$("#ov").classList.toggle("show",v)};
+$("#gear").onclick=()=>openSet(true);$("#closeSet").onclick=$("#ov").onclick=()=>openSet(false);
+addEventListener("keydown",e=>{if(e.key==="Escape"){openSet(false);closeEd()}});
+/* ===== Installieren (PWA, sonst Anleitung) ===== */
+let instEv=null;
+addEventListener("beforeinstallprompt",e=>{e.preventDefault();instEv=e});
+addEventListener("appinstalled",()=>{$("#instBtn").style.display="none";toast("Voice Carnage installiert")});
+if(/Electron/.test(navigator.userAgent)||matchMedia("(display-mode: standalone)").matches)$("#instBtn").style.display="none";
+const closeInst=()=>{$("#instDlg").classList.remove("show");$("#ov2").classList.remove("show")};
+$("#instClose").onclick=closeInst;
+$("#instBtn").onclick=async()=>{if(instEv){instEv.prompt();await instEv.userChoice;instEv=null}else{$("#instDlg").classList.add("show");$("#ov2").classList.add("show")}};
+safe(()=>{const c=document.createElement("canvas");c.width=c.height=512;const g=c.getContext("2d");g.fillStyle="#1c1f23";g.fillRect(0,0,512,512);g.strokeStyle="#22d3ee";g.lineWidth=36;g.lineCap="round";
+  [[96,200,312],[176,130,382],[256,70,442],[336,130,382],[416,200,312]].forEach(b=>{g.beginPath();g.moveTo(b[0],b[1]);g.lineTo(b[0],b[2]);g.stroke()});
+  const m={name:"Voice Carnage",short_name:"Voice Carnage",start_url:location.href,display:"standalone",background_color:"#1c1f23",theme_color:"#1c1f23",icons:[{src:c.toDataURL(),sizes:"512x512",type:"image/png"}]};
+  const l=document.createElement("link");l.rel="manifest";l.href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:"application/manifest+json"}));document.head.appendChild(l)});
+/* ===== Start ===== */
+S.pads=safe(()=>{const a=JSON.parse(localStorage.getItem("vc_pads2"));return Array.isArray(a)&&a.length===9?a:null},null)||Array(9).fill(null);
+renderPads();refresh();listDevices();
+navigator.mediaDevices?.addEventListener?.("devicechange",listDevices);
+</script>
+</body>
+</html>
