@@ -1,0 +1,9 @@
+{
+  "name": "voice-carnage",
+  "version": "1.0.0",
+  "description": "Realtime Voice Changer & Soundboard",
+  "main": "main.js",
+  "scripts": { "start": "electron .", "dist": "electron-builder --win portable" },
+  "devDependencies": { "electron": "^33.0.0", "electron-builder": "^25.0.0" },
+  "build": { "appId": "com.voicecarnage.app", "productName": "Voice Carnage", "files": ["main.js", "index.html"] }
+}
